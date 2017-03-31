@@ -1,0 +1,30 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity top_level is
+  generic (WIDTH : positive := 32);
+  port (
+  
+		 clk_50MHz  : in  std_logic;
+		 rst   		: in  std_logic;
+		 
+		 inPort0_en : in std_logic;
+		 inPort1_en : in std_logic;
+		 
+		 inPort0 : in std_logic_vector(7 downto 0);
+		 inPort1 : in std_logic_vector(7 downto 0);
+		 
+		 output : out std_logic_vector(WIDTH-1 downto 0)
+	 );
+end top_level;
+
+architecture STR of top_level is
+	
+	
+begin 
+
+
+
+	 
+end STR;
