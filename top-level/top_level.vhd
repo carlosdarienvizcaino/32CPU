@@ -29,6 +29,9 @@ architecture STR of top_level is
 	signal cpu_input : std_logic_vector(WIDTH -1 downto 0);
 	signal instruction : std_logic_vector(WIDTH -1 downto 0);
 	
+	signal internalInPort1 : std_logic_vector(WIDTH-1 downto 0) := "000000000000000000000000" & inPort1;
+	signal internalInPort2 : std_logic_vector(WIDTH-1 downto 0) := "000000000000000000000000" & inPort2;
+	
 begin 
 
 	MEMORY: entity work.memory
@@ -41,8 +44,8 @@ begin
 			inPort1_en  => inPort1_en,
 			inPort2_en  => inPort2_en,
 		 
-		   inPort1     => "000000000000000000000000" & inPort1,
-		   inPort2     => "000000000000000000000000" & inPort2,
+		   inPort1     => internalInPort1,
+		   inPort2     => internalInPort2,
 		 
 		   address     => address,
 		   cpu_input   => cpu_input,

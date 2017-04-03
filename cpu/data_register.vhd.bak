@@ -7,8 +7,8 @@ entity ioport is
   port (
 			clk    : in std_logic;
 			en     : in std_logic;
-			input  : in std_logic_vector(WIDTH-1 downto 0);
-			output : out std_logic_vector(WIDTH-1 downto 0)
+			input  : in std_logic_vector(WIDTH -1 downto 0);
+			output : out std_logic_vector(31 downto 0)
 	 );
 end ioport;
 

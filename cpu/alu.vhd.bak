@@ -5,15 +5,18 @@ use work.alu_lib.all;
 
 
 entity alu is
-	generic (WIDTH : positive := 8);
-	port (
+	generic (
+	WIDTH : positive := 8
+	);
+port (
 	input1   : in std_logic_vector(WIDTH-1 downto 0);
 	input2   : in std_logic_vector(WIDTH-1 downto 0);
 	opSelect : in std_logic_vector(5 downto 0);
 	output : out std_logic_vector(WIDTH-1 downto 0);
 	outputHi : out std_logic_vector(WIDTH-1 downto 0);
-	branchTaken : out std_logic
-	);
+	branckTaken : out std_logic
+	
+);
 end alu;
 
 architecture BHV of alu is
@@ -27,7 +30,7 @@ begin
 	begin
 		
 		outputHi <= (others => '0');
-		branchTaken <= '0';
+		branckTaken <= '0';
 	
 		case opSelect is
 		
@@ -62,9 +65,8 @@ begin
 				output <= input1(WIDTH-2 downto 0) & "0";
 				
 			when others =>
-				temp_add := ("0" & unsigned(input1)) + ("0" & unsigned(input2));
-				output <= std_logic_vector(unsigned(temp_add(WIDTH-1 downto 0)));
-				
+				output <= (others => '0'); --set all the bits to 0
+				--output <= std_logic_vector(to_unsigned(0,WIDTH));
 		end case;
 		
 	end process;
