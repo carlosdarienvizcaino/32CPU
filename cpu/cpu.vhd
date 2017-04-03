@@ -41,7 +41,7 @@ architecture STR of cpu is
 	signal MemReadOut : std_logic;
 	signal MemWriteOut : std_logic;
 	
-	-- Instruction RegISTERS
+	-- Instruction Registers
 	signal source_register : std_logic_vector(4 downto 0);
 	signal target_register : std_logic_vector(4 downto 0);
 	signal destination_register : std_logic_vector(5 downto 0);
@@ -58,11 +58,16 @@ architecture STR of cpu is
 	-- ALU MUX Input 1
 	signal error : std_logic_vector(WIDTH-1 downto 0) := (others => '1');
 	signal alu_mux1_output : std_logic_vector(WIDTH-1 downto 0);
+	signal alu_mux1_mux_in1: std_logic_vector(WIDTH-1 downto 0);
+	signal alu_mux1_mux_in2: std_logic_vector(WIDTH-1 downto 0);
+
+
 	
 	-- ALU MUX Input 2
 	signal four : std_logic_vector(WIDTH-1 downto 0) := std_logic_vector(to_unsigned(4, WIDTH));
 	signal alu_mux2_output : std_logic_vector(WIDTH-1 downto 0);
-	
+	signal alu_mux2_mux_in4 : std_logic_vector(WIDTH-1 downto 0);
+
 	-- ALU Registers
 	signal alu_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_output_Hi : std_logic_vector(WIDTH-1 downto 0);
@@ -79,8 +84,9 @@ architecture STR of cpu is
 	signal ALU_LO_HI : std_logic_vector(1 downto 0);
 	
 	-- PC 
-	signal pc_en : std_logic;
+	signal pc_enable : std_logic;
 	signal pc_output : std_logic_vector(WIDTH-1 downto 0);
+	signal pc_mux_mux_in3 : std_logic_vector(WIDTH-1 downto 0);
 	
 	signal write_register_mux_output : std_logic_vector(4 downto 0);
 	signal memory_data_mux_output : std_logic_vector(WIDTH-1 downto 0);
@@ -262,7 +268,7 @@ begin
 			rst => rst,
 			clock => clock,
 			input => pc_output_mux,
-			enable => (branchTaken and PCWriteCond) or PCWrite,
+			enable => pc_enable,
 			
 			-- Outputs
 			output => pc_output	
@@ -322,8 +328,8 @@ begin
 	   generic map(WIDTH => WIDTH)
 		port map (
 		-- Inports
-		mux_in1  => "0000000000000000000000000000" & pc_output(31 downto 28),
-		mux_in2  => "000000000000000000000000000" & pc_output(10 downto 6),
+		mux_in1  => alu_mux1_mux_in1,
+		mux_in2  => alu_mux1_mux_in2,
 		mux_in3  => regA_output,
 		mux_in4  => error,
 		mux_sel  => ALUSrcA,
@@ -339,7 +345,7 @@ begin
 		mux_in1  => regB_output,
 		mux_in2  => four,
 		mux_in3  => signed_extend_output,
-		mux_in4  => std_logic_vector(shift_left( unsigned(signed_extend_output), 2 )),
+		mux_in4  => alu_mux2_mux_in4, 
 		mux_sel  => ALUSrcB,
 		
 		
@@ -367,7 +373,7 @@ begin
 		-- Inports
 		mux_in1  => alu_output,
 		mux_in2  => alu_reg_output,
-		mux_in3  => pc_output(31 downto 28) & pc_output(25 downto 0) & "00",
+		mux_in3  => pc_mux_mux_in3, 
 		mux_in4  => error,
 		mux_sel  => PCSource,
 		
@@ -377,5 +383,11 @@ begin
 		
 		MemRead <= MemReadOut;
 		MemWrite <= MemWriteOut;
+		pc_enable <= (branchTaken and PCWriteCond) or PCWrite;
+
+		alu_mux1_mux_in1  <= "0000000000000000000000000000" & pc_output(31 downto 28);
+		alu_mux1_mux_in2  <= "000000000000000000000000000" & pc_output(10 downto 6);
+		alu_mux2_mux_in4  <= std_logic_vector(shift_left( unsigned(signed_extend_output), 2 ));
+		pc_mux_mux_in3    <= pc_output(31 downto 28) & pc_output(25 downto 0) & "00";
 		
 end STR;
