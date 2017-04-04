@@ -34,9 +34,11 @@ architecture STR of cpu_controller is
 	
 	
 	type STATE_TYPE is (
+			S_START,
 			S_INSTRUCTION_FETCH,
 			S_INSTRUCTION_DECODE,
-			S_MEMORY_ADDRESS,
+			S_MEMORY_ADDRESS, S_LW_MEMORY_ACCESS, S_SW_MEMORY_ACCESS, S_MEMORY_ACCESS_COMPUTATION, S_MEMORY_READ_COMPLETION,
+			S_WIRTE_TO_REGISTER_FILE,
 		   S_RTYPE_EXECUCTION, S_RTYPE_COMPLETION,
 			S_BRANCH_COMPLETION,
 			S_JUMP_COMPLETION,
@@ -51,7 +53,8 @@ begin
 		begin 
 			
 			if( rst = '1') then
-				currentState <= S_INSTRUCTION_FETCH;
+				currentState <= S_START;
+
 			elsif (clock'event and clock = '1') then 
 				currentState <= nextState;
 			end if;
@@ -80,9 +83,16 @@ begin
 			ALUSrcA <= "00";
 			RegWrite <= '0';
 			RegDst <= '0';
+
 			
 			case currentState is
-			
+
+				-- Start	
+				when S_START =>
+
+				nextState <= S_INSTRUCTION_FETCH;
+				
+				-- Fetch
 				when S_INSTRUCTION_FETCH =>
 					
 				 MemRead <= '1'; -- enable read from memory
@@ -93,18 +103,149 @@ begin
 				 
 				 ALUSrcA <= "00"; -- select pc address
 				 ALUSrcB <= "01"; -- select four 
-				 ALUOp <= (others => '0'); -- set op code to R-Type
+				 ALUOp <= "100001";
+				 --ALUOp <= (others => '0'); -- set op code to R-Type
 				 
-				 nextState <= S_INSTRUCTION_FETCH;
+				 nextState <= S_INSTRUCTION_DECODE;
 				
 				when S_INSTRUCTION_DECODE =>
 				
+				 -- Disable PC increment
+				 PcWriteCond <= '0';
+				 PcWrite <= '0';
+				 
 				 ALUSrcA <= "00"; -- select pc address
 				 ALUSrcB <= "11"; -- select four 
 				 ALUOp <= (others => '0'); -- set op code to R-Type
 				
-				 nextState <= S_INSTRUCTION_FETCH;
+					-- LW	
+					 if (opcode = "100011") then 
+						nextState <= S_MEMORY_ACCESS_COMPUTATION;
+					
+					-- SW
+					 elsif (opcode = "101011") then 
+						nextState <= S_MEMORY_ACCESS_COMPUTATION;
+					
+					-- RTYPE
+					 elsif(opcode = "000000") then
+						nextState <= S_RTYPE_EXECUCTION;
+						
+					-- JUMP COMPLETION
+					 elsif(opcode = "000010") then
+						nextState <= S_JUMP_COMPLETION;
+					
+					 else 
+						nextState <= S_INSTRUCTION_FETCH;
+					 end if;
+
+         
+			
+			-- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS ---
+				 when S_MEMORY_ACCESS_COMPUTATION =>
+					
+					-- Common Add offset plus base
+
+					-- Get base from RegA
+					ALUSrcA <= "10";
+
+					-- Get offset
+					ALUSrcB <= "10";
+
+					-- Add instruction using addi
+					ALUOp <= "100001";
+
+					-- LW
+				 	if (opcode = "100011") then 
+						nextState <= S_LW_MEMORY_ACCESS;
+
+					else
+						nextState <= S_SW_MEMORY_ACCESS;
+
+					end if;
+
+				when S_LW_MEMORY_ACCESS  =>
+				 	
+					-- Select ALU output as adress
+					IorD <= '1';
+
+					-- Enable reading from memory
+				    MemRead <= '1';
+					 
+					-- Dont write to register in order to keep 
+					IRWrite <= '0';
+
+					nextState <= S_MEMORY_READ_COMPLETION;
+					
+				when S_MEMORY_READ_COMPLETION  =>
+				 
+				 	--bbbbbbbbb
+
+					nextState <= S_WIRTE_TO_REGISTER_FILE;
+					
+				when S_WIRTE_TO_REGISTER_FILE  =>
+					
+					-- Select destination register
+					RegDst <= '0';
+					
+					-- Select Memory to register
+					MemToReg <= '1';
+					
+					-- Enable writing to register file
+					RegWrite <= '1';
+					
+					nextState <= S_INSTRUCTION_FETCH;
+						
+				when S_SW_MEMORY_ACCESS  =>
+				 	
+					nextState <= S_INSTRUCTION_FETCH;
+					
+				-- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS --- -- MEMORY ACCESS ---
 				
+				
+				-- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE --
+				when  S_RTYPE_EXECUCTION=>
+
+					-- Select Register file output a
+					ALUSrcA <= "10";
+
+					-- Select Register file output b
+					ALUSrcB <= "00";
+					
+					-- Tell ALU controller this is an RTYPE
+					ALUOp <= opcode;
+
+					nextState <= S_RTYPE_COMPLETION;
+					
+				when  S_RTYPE_COMPLETION=>
+
+					-- Select destination register 
+					RegDst <= '1';
+
+
+					-- Select ALUOutput
+					MemToReg <= '0';
+
+					-- Enable Writing to register file
+					RegWrite <= '1';
+
+					nextState <= S_INSTRUCTION_FETCH;
+				-- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE --
+				
+				
+				
+				-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
+					when S_JUMP_COMPLETION => 
+					
+					-- Enable PC 
+					PCWrite <= '1';
+					PCWriteCond <= '1';
+					
+					-- Select Jump Address
+					PCSource <= "10";
+					
+					nextState <= S_INSTRUCTION_FETCH;
+					
+				-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
 				when others => null;
 				
 			

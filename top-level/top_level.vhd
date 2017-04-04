@@ -29,10 +29,19 @@ architecture STR of top_level is
 	signal cpu_input : std_logic_vector(WIDTH -1 downto 0);
 	signal instruction : std_logic_vector(WIDTH -1 downto 0);
 	
-	signal internalInPort1 : std_logic_vector(WIDTH-1 downto 0) := "000000000000000000000000" & inPort1;
-	signal internalInPort2 : std_logic_vector(WIDTH-1 downto 0) := "000000000000000000000000" & inPort2;
+	signal internalInPort1 : std_logic_vector(WIDTH-1 downto 0);
+	signal internalInPort2 : std_logic_vector(WIDTH-1 downto 0);
+	
+	signal cpu_clck : std_logic;
 	
 begin 
+
+	CPU_CLOCK : entity work.clk_div
+	port map(
+		  clk_in  => clock,
+        clk_out => cpu_clck,
+        rst     => rst
+	);
 
 	MEMORY: entity work.memory
 		port map (
@@ -58,16 +67,20 @@ begin
 	CPU: entity work.cpu
 		port map (
 			-- Inputs
-			clock     => clock,
+			clock     => cpu_clck,
 			rst       => rst,
 			instruction => instruction,
-			address 	 => address,
 			
 			-- Outputs
+			address 	 => address,
 			MemRead   => MemRead,
 			MemWrite  => MemWrite,
 			output    => cpu_input
 		);	
 
+	
+	internalInPort1 <= "000000000000000000000000" & inPort1;
+	internalInPort2 <= "000000000000000000000000" & inPort2;
+	
 	 
 end STR;

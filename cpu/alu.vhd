@@ -46,6 +46,11 @@ begin
 				output <= std_logic_vector(unsigned(temp_mult(WIDTH-1 downto 0)));
 				outputHi <= std_logic_vector(unsigned(temp_mult(WIDTH*2-1 downto WIDTH)));
 			
+			when ALU_MUL_UNSGINED =>
+				temp_mult:= unsigned(input1) * unsigned(input2); 
+				output <= std_logic_vector(unsigned(temp_mult(WIDTH-1 downto 0)));
+				outputHi <= std_logic_vector(unsigned(temp_mult(WIDTH*2-1 downto WIDTH)));
+			
 			when ALU_AND =>
 				output <= input1 and input2;
 				

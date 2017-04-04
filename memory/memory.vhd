@@ -30,7 +30,7 @@ architecture STR of memory is
 	-- RAM
 	signal data_to_ram : std_logic_vector(WIDTH-1 downto 0);
 	signal data_from_ram : std_logic_vector(WIDTH-1 downto 0);
-	signal ram_write_en : std_logic := '0';
+	signal ram_write_en : std_logic;
 	
 	-- IO
 	signal inPort1Out : std_logic_vector(WIDTH-1 downto 0);
@@ -40,21 +40,18 @@ architecture STR of memory is
 	signal address_select : std_logic_vector(1 downto 0);
 	
 begin 
+	
+	ram_write_en <= (not MemRead and MemWrite);
+	instruction <= data_from_ram;
 
 	RAM: entity work.ram
 		port map (
 			clock     => clock,
-			address 	 => address(9 downto 2),
+			address 	 => address(7 downto 0),
 			data      => data_to_ram,
 			q			 => data_from_ram,
 			wren      => ram_write_en
 		);	
-		
-   READ_ADDRESS_MAPPER: entity work.address_mapper
-		port map(
-			input_address => address,
-			output => address_select
-		);
 		
 	IOPort1 : entity work.ioport
 		port map (
@@ -81,33 +78,5 @@ begin
 			output => output
 		);
 	 	 
-	 process(address)
-	 begin
-		
-		instruction <= std_logic_vector(to_unsigned(4, 32));
-		
-		if( address = to_stdlogicvector(x"0000FFF8")) then 
-				instruction <= inPort1Out;
-				
-		elsif (address = to_stdlogicvector(x"0000FFFC")) then
-				instruction <= inPort2Out;
-				
-		else 
-				instruction <= data_from_ram;
-		
-		end if;
-	 end process;
-	 
-	 process(MemRead, MemWrite)
-	 begin
-		
-		if (MemRead = '1') then
-			ram_write_en <= '0';
-			
-		elsif (MemWrite = '1') then
-			ram_write_en <= '1';
-			
-		end if;
-	 end process;
 	
 end STR;

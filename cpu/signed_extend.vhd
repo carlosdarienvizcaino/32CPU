@@ -5,7 +5,7 @@ entity signed_extend is
 	port (
 		-- Inputs
 		clock    : in std_logic;
-		intput   : in std_logic_vector(15 downto 0);
+		input   : in std_logic_vector(15 downto 0);
 		isSigned : in std_logic;
 		
 		-- Outputs
@@ -16,5 +16,6 @@ end signed_extend;
 architecture BHV of signed_extend is
 
 begin
-
+	
+	output <= "0000000000000000" & input;
 end BHV;

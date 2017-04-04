@@ -14,31 +14,22 @@ end mux_4x2;
 
 architecture BHV of mux_4x2 is
 
-	signal internal_mux_in1 : std_logic_vector(width-1 downto 0);
-	signal internal_mux_in2 : std_logic_vector(width-1 downto 0);
-	signal internal_mux_in3 : std_logic_vector(width-1 downto 0);
-	signal internal_mux_in4 : std_logic_vector(width-1 downto 0);
-	
 begin
 
-	internal_mux_in1 <= mux_in1;
-	internal_mux_in2 <= mux_in2;
-	internal_mux_in3 <= mux_in3;
-	internal_mux_in4 <= mux_in4;
 
 	process(mux_sel, mux_in1, mux_in2, mux_in3, mux_in4)
 	begin
 		if (mux_sel = "00") then
-			mux_out <= internal_mux_in1;
+			mux_out <= mux_in1;
 		
 		elsif (mux_sel = "01") then
-			mux_out <= internal_mux_in2;
+			mux_out <= mux_in2;
 		
 		elsif (mux_sel = "10") then
-			mux_out <= internal_mux_in3;
+			mux_out <= mux_in3;
 		
 		else 
-			mux_out <= internal_mux_in4;
+		       mux_out <= mux_in4;
 		end if;
 		
 	end process;

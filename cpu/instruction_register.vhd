@@ -12,6 +12,7 @@ entity instruction_register is
 		 input      : in std_logic_vector(31 downto 0);
 		 
 		 -- Outpus
+		 output_25to0      : out std_logic_vector(25 downto 0);
 		 output_31to26     : out std_logic_vector(5 downto 0);
 		 output_25to21     : out std_logic_vector(4 downto 0);
 		 output_20to16     : out std_logic_vector(4 downto 0);
@@ -36,6 +37,7 @@ begin
 		elsif (clock'event and clock = '1') then
 		
 			if (IRWrite = '1') then 
+				output_25to0  <= input(25 downto 0);
 				output_31to26 <= input(31 downto 26);
 				output_25to21 <= input(25 downto 21);
 				output_20to16 <= input(20 downto 16);

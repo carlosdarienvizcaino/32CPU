@@ -45,7 +45,12 @@ begin  -- TB
 
     process
     begin
-	 
+			
+			rst <= '1';
+			wait until clock = '1';
+			wait for 40 ns;
+			rst <= '0';
+			
 			-- Test read RAM
 			for i in 0 to WIDTH-1 loop
 					--MemRead <= '1';

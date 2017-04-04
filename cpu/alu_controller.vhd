@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.alu_lib.all;
 
 entity alu_controller is
   generic (WIDTH : positive := 32);
@@ -32,8 +33,18 @@ begin
 		
 		if (ALUOp = "000000") then 
 			OpSelect <= IR5To0;
+			
+			-- Set HI_en when IR5To is mult or multu
+			if ( IR5To0 = ALU_MULT or IR5To0 = ALU_MUL_UNSGINED) then
+				HI_en <= '1';
+				LO_en <= '1';
+			else
+				HI_en <= '1';
+				LO_en <= '1';
+			end if;
+			
 		else
-			OpSelect <= (others =>('0'));
+			OpSelect <= ALUOp;
 		end if;
 	end process;
 	

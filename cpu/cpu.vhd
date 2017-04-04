@@ -9,9 +9,9 @@ entity cpu is
 		clock       : in std_logic;
 		rst         : in std_logic;
 		instruction : in std_logic_vector(WIDTH-1 downto 0);
-		address 	   : in std_logic_vector(WIDTH-1 downto 0);
 		
 		-- Outputs
+		address   : out std_logic_vector(WIDTH-1 downto 0);
 		MemRead   : out std_logic;
 		MemWrite  : out std_logic;
 		output    : out std_logic_vector(WIDTH-1 downto 0)
@@ -34,7 +34,7 @@ architecture STR of cpu is
 	signal PcSource : std_logic_vector(1 downto 0);
 	signal ALUOp : std_logic_vector(5 downto 0);
 	signal ALUSrcB : std_logic_vector(1 downto 0);
-	signal ALUSrcA : std_logic_vector(1 downto 0);
+	signal ALUSrcA :std_logic_vector(1 downto 0);
 	signal RegWrite : std_logic;
 	signal RegDst : std_logic;
 	
@@ -60,8 +60,6 @@ architecture STR of cpu is
 	signal alu_mux1_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_mux1_mux_in1: std_logic_vector(WIDTH-1 downto 0);
 	signal alu_mux1_mux_in2: std_logic_vector(WIDTH-1 downto 0);
-
-
 	
 	-- ALU MUX Input 2
 	signal four : std_logic_vector(WIDTH-1 downto 0) := std_logic_vector(to_unsigned(4, WIDTH));
@@ -71,8 +69,8 @@ architecture STR of cpu is
 	-- ALU Registers
 	signal alu_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_output_Hi : std_logic_vector(WIDTH-1 downto 0);
-	signal alu_reg_output : std_logic_vector(WIDTH-1 downto 0);
-   signal alu_low_reg_output : std_logic_vector(WIDTH-1 downto 0);
+	signal alu_reg_output : std_logic_vector(WIDTH-1 downto 0); 
+	signal alu_low_reg_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_hi_reg_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_mux_output : std_logic_vector(WIDTH-1 downto 0);
 	signal branchTaken : std_logic;
@@ -95,9 +93,17 @@ architecture STR of cpu is
 	signal regB_output : std_logic_vector(WIDTH-1 downto 0);
 	signal alu_high_reg_output : std_logic_vector(WIDTH-1 downto 0);
 	signal pc_output_mux : std_logic_vector(WIDTH-1 downto 0);
+	signal address_output : std_logic_vector(WIDTH-1 downto 0);
+	
+	signal instr_index : std_logic_vector(25 downto 0);
 	
 
 begin 
+
+	address <= address_output;
+	output <= regB_output; 
+	MemRead <= MemReadOut;
+	MemWrite <= MemWriteOut;
 
 	CONTROLLER: entity work.cpu_controller
 		port map (
@@ -134,6 +140,7 @@ begin
 		 IRWrite    => IRWrite,
 		 
 		 -- Outputs
+		 output_25to0      => instr_index,
 		 output_31to26     => instruction_opcode,
 		 output_25to21     => source_register,
 		 output_20to16     => target_register,
@@ -154,8 +161,8 @@ begin
 		wr_en  => RegWrite,
 		
 		-- Outputs
-		rd_data1  => read_data1_output,
-		rd_data0  => read_data2_output
+		rd_data0  => read_data1_output,
+		rd_data1  => read_data2_output
 		);
 		
 	ALU: entity work.alu
@@ -279,7 +286,7 @@ begin
 		port map(
 			-- Inputs
 			clock => clock,
-			intput => instruction_lower_bits,
+			input => instruction_lower_bits,
 			isSigned => isSigned,
 			
 			-- Outputs
@@ -296,7 +303,7 @@ begin
 		mux_sel  => IorD,
 		
 		-- Outputs
-		mux_out  => output
+		mux_out  => address_output
 		);
 	
 	WRITE_REGISTER_MUX: entity work.mux_2x1
@@ -328,7 +335,7 @@ begin
 	   generic map(WIDTH => WIDTH)
 		port map (
 		-- Inports
-		mux_in1  => alu_mux1_mux_in1,
+		mux_in1  => pc_output,
 		mux_in2  => alu_mux1_mux_in2,
 		mux_in3  => regA_output,
 		mux_in4  => error,
@@ -379,15 +386,19 @@ begin
 		
 		-- Outputs
 		mux_out  => pc_output_mux
-		);
+		);-- MUXES -- -- MUXES -- -- MUXES -- -- MUXES --
+	
 		
 		MemRead <= MemReadOut;
 		MemWrite <= MemWriteOut;
 		pc_enable <= (branchTaken and PCWriteCond) or PCWrite;
 
-		alu_mux1_mux_in1  <= "0000000000000000000000000000" & pc_output(31 downto 28);
-		alu_mux1_mux_in2  <= "000000000000000000000000000" & pc_output(10 downto 6);
+		alu_mux1_mux_in1 <= "0000000000000000000000000000" & pc_output(31 downto 28);
+		--alu_mux1_mux_in2 <= "000000000000000000000000000" & pc_output(10 downto 6);
+		alu_mux1_mux_in2 <= "000000000000000000000000000" & source_register;
+
+
 		alu_mux2_mux_in4  <= std_logic_vector(shift_left( unsigned(signed_extend_output), 2 ));
-		pc_mux_mux_in3    <= pc_output(31 downto 28) & pc_output(25 downto 0) & "00";
+		pc_mux_mux_in3    <= pc_output(31 downto 28) & instr_index & "00";
 		
 end STR;
