@@ -34,9 +34,15 @@ architecture STR of top_level is
 	
 	signal cpu_clck : std_logic;
 	
+	constant CLOCK_FREQUENCY : natural := 500000000;
+	
 begin 
 
 	CPU_CLOCK : entity work.clk_div
+	generic map(
+		clk_in_freq  => CLOCK_FREQUENCY,      
+      clk_out_freq => CLOCK_FREQUENCY/2
+	)
 	port map(
 		  clk_in  => clock,
         clk_out => cpu_clck,

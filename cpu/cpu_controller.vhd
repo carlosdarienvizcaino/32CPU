@@ -178,11 +178,9 @@ begin
 					
 				when S_MEMORY_READ_COMPLETION  =>
 				 
-				 	--bbbbbbbbb
+				 	-- Wait for memory register to load
 
-					nextState <= S_WIRTE_TO_REGISTER_FILE;
-					
-				when S_WIRTE_TO_REGISTER_FILE  =>
+					--nextState <= S_WIRTE_TO_REGISTER_FILE;
 					
 					-- Select destination register
 					RegDst <= '0';
@@ -194,6 +192,12 @@ begin
 					RegWrite <= '1';
 					
 					nextState <= S_INSTRUCTION_FETCH;
+					
+					
+				when S_WIRTE_TO_REGISTER_FILE  =>
+					
+					nextState <= S_INSTRUCTION_FETCH;
+					
 						
 				when S_SW_MEMORY_ACCESS  =>
 				 	
