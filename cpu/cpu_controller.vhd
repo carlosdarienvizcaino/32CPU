@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.alu_lib.all;
 
 entity cpu_controller is
   generic (WIDTH : positive := 32);
@@ -9,6 +10,7 @@ entity cpu_controller is
 		clock       : in std_logic;
 		rst         : in std_logic;
 		opcode      : in  std_logic_vector(5 downto 0);
+		IR5to0      : in  std_logic_vector(5 downto 0);
 		
 		-- Outputs
 		PcWriteCond   : out std_logic;
@@ -38,11 +40,11 @@ architecture STR of cpu_controller is
 			S_INSTRUCTION_FETCH,
 			S_INSTRUCTION_DECODE,
 			S_MEMORY_ADDRESS, S_LW_MEMORY_ACCESS, S_SW_MEMORY_ACCESS, S_MEMORY_ACCESS_COMPUTATION, S_MEMORY_READ_COMPLETION,
-			S_WIRTE_TO_REGISTER_FILE,
-		   S_RTYPE_EXECUCTION, S_RTYPE_COMPLETION,
+		   	S_RTYPE_EXECUCTION, S_RTYPE_COMPLETION,
 			S_BRANCH_COMPLETION,
 			S_JUMP_COMPLETION,
-			S_ITYPE_EXECUTION
+			S_ITYPE_EXECUTION, S_ITYPE_COMPLETION,
+			S_SHIFT_EXECUTION, S_SHIFT_COMPLETION
 	);
 	
 	signal currentState, nextState : STATE_TYPE;
@@ -125,7 +127,19 @@ begin
 					-- SW
 					 elsif (opcode = "101011") then 
 						nextState <= S_MEMORY_ACCESS_COMPUTATION;
-					
+						
+					-- SHIFT LEFT LOGIC
+					elsif (opcode = RTYPE and IR5to0 = ALU_SLL ) then 
+						nextState <= S_SHIFT_EXECUTION;
+						
+					-- SHIFT RIGHT LOGIC
+					elsif (opcode = RTYPE and IR5to0 = ALU_SRL ) then 
+						nextState <= S_SHIFT_EXECUTION;
+						
+					-- SHIFT RIGHT ARITHMETIC
+					elsif (opcode = RTYPE and IR5to0 = ALU_SRA ) then 
+						nextState <= S_SHIFT_EXECUTION;
+						
 					-- RTYPE
 					 elsif(opcode = "000000") then
 						nextState <= S_RTYPE_EXECUCTION;
@@ -133,9 +147,10 @@ begin
 					-- JUMP COMPLETION
 					 elsif(opcode = "000010") then
 						nextState <= S_JUMP_COMPLETION;
+						
 					
-					 else 
-						nextState <= S_INSTRUCTION_FETCH;
+					 else 	
+						nextState <= S_ITYPE_EXECUTION;		
 					 end if;
 
          
@@ -193,11 +208,6 @@ begin
 					
 					nextState <= S_INSTRUCTION_FETCH;
 					
-					
-				when S_WIRTE_TO_REGISTER_FILE  =>
-					
-					nextState <= S_INSTRUCTION_FETCH;
-					
 						
 				when S_SW_MEMORY_ACCESS  =>
 				 	
@@ -215,7 +225,7 @@ begin
 					-- Select Register file output b
 					ALUSrcB <= "00";
 					
-					-- Tell ALU controller this is an RTYPE
+					-- Tell ALU controller this is an ITYPE
 					ALUOp <= opcode;
 
 					nextState <= S_RTYPE_COMPLETION;
@@ -236,8 +246,70 @@ begin
 				-- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE --
 				
 				
+
+				-- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE --
+
+
+				when S_ITYPE_EXECUTION => 
+
+					-- Select Register file output a
+					ALUSrcA <= "10";
+
+					-- Select immediate value 
+					ALUSrcB <= "10";
+					
+					-- Tell ALU controller this is an RTYPE
+					ALUOp <= opcode;
 				
-				-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
+					nextState <= S_ITYPE_COMPLETION;
+				
+				when S_ITYPE_COMPLETION =>
+
+					-- Select destination register 
+					RegDst <= '0';
+
+
+					-- Select ALUOutput
+					MemToReg <= '0';
+
+					-- Enable Writing to register file
+					RegWrite <= '1';
+
+					nextState <= S_INSTRUCTION_FETCH;
+				
+					-- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE --
+					
+					
+					-- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT --
+					when S_SHIFT_EXECUTION =>
+						
+						-- Select shift amount
+						ALUSrcA <= "01";
+						
+						-- Select RegB
+						ALUSrcB <= "00";
+						
+						-- Send Opcode to ALUController
+						ALUOp <= opcode;
+						
+						nextState <= S_SHIFT_COMPLETION;
+						
+					when S_SHIFT_COMPLETION =>
+					
+						-- Select distination register 15-11 for register file address
+						RegDst <= '1';
+						
+						-- Select ALU ouput for register file data
+						MemToReg <= '0';
+						
+						-- Enable Writing to Register File
+						RegWrite <= '1';
+					
+						nextState <= S_INSTRUCTION_FETCH;
+				
+					-- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT --
+				
+					-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
 					when S_JUMP_COMPLETION => 
 					
 					-- Enable PC 

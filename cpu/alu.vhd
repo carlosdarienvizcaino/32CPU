@@ -17,6 +17,7 @@ entity alu is
 end alu;
 
 architecture BHV of alu is
+
 begin
 	process(input1,input2,opSelect)
 		variable temp_add : unsigned(WIDTH downto 0);
@@ -24,6 +25,9 @@ begin
 		variable temp_mult : unsigned(2*WIDTH-1 downto 0);
 		variable zeros: unsigned(WIDTH-1 downto 0);
 		variable temp_input2 : integer;
+		variable temp_operation : std_logic_vector(WIDTH-1 downto 0);
+		
+		
 	begin
 		
 		outputHi <= (others => '0');
@@ -61,11 +65,15 @@ begin
 				output <= input1 xor input2;
 				
 			when ALU_SRL =>
-				output <= "0" & input1(WIDTH-1 downto 1);
-				
+				output <= std_logic_vector(shift_right( unsigned(input2),  to_integer(unsigned(input1) )));
+				 
 			when ALU_SLL =>
-				output <= input1(WIDTH-2 downto 0) & "0";
+				output <= std_logic_vector(shift_left( unsigned(input2),  to_integer(unsigned(input1) )));
 				
+			when ALU_SRA => 
+				temp_operation := std_logic_vector(shift_right( unsigned(input2),  to_integer(unsigned(input1) )));
+				output <= "1" & temp_operation(WIDTH-2 downto 0);
+							
 			when others =>
 				temp_add := ("0" & unsigned(input1)) + ("0" & unsigned(input2));
 				output <= std_logic_vector(unsigned(temp_add(WIDTH-1 downto 0)));

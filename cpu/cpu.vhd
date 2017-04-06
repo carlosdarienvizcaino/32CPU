@@ -111,6 +111,7 @@ begin
 		clock       => clock,
 		rst         => rst,
 		opcode      => instruction_opcode,
+		IR5To0 => instruction_lower_bits(5 downto 0),
 		
 		-- Outputs
 		PcWriteCond   => PcWriteCond,
@@ -394,8 +395,7 @@ begin
 		pc_enable <= (branchTaken and PCWriteCond) or PCWrite;
 
 		alu_mux1_mux_in1 <= "0000000000000000000000000000" & pc_output(31 downto 28);
-		--alu_mux1_mux_in2 <= "000000000000000000000000000" & pc_output(10 downto 6);
-		alu_mux1_mux_in2 <= "000000000000000000000000000" & source_register;
+		alu_mux1_mux_in2 <= "000000000000000000000000000" & instruction_lower_bits(10 downto 6);
 
 
 		alu_mux2_mux_in4  <= std_logic_vector(shift_left( unsigned(signed_extend_output), 2 ));
