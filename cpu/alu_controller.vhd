@@ -31,43 +31,75 @@ begin
 		HI_en <= '0';
 		LO_en <= '0';
 		ALU_LO_HI <= (others =>('0'));
+		OpSelect <= "111111";
 		
 		if (ALUOp = "000000") then 
 			OpSelect <= IR5To0;
 			
-			-- Set HI_en when IR5To is mult or multu
-			if ( IR5To0 = ALU_MULT or IR5To0 = ALU_MUL_UNSGINED) then
-				HI_en <= '1';
-				LO_en <= '1';
-			else
-				HI_en <= '1';
-				LO_en <= '1';
-			end if;
+			case IR5To0 is 
+			
+				when ALU_MFHI => 
+					ALU_LO_HI <= "10";
+					
+				when ALU_MFLO =>
+					ALU_LO_HI <= "01";
+					
+				when ALU_MULT =>
+					HI_en <= '1';
+					LO_en <= '1';
+					
+				when ALU_MUL_UNSGINED => 
+					HI_en <= '1';
+					LO_en <= '1';
+					
+				when others =>
+					HI_en <= '0';
+					LO_en <= '0';
+					ALU_LO_HI <= (others =>('0'));
+					
+			end case;
 			
 		else
 			
 			case ALUOp is      
         
 			-- Arithmetic 
-			when ALU_ADD_I => OpSelect <= ALU_ADD;
-			when ALU_SUB_I => OpSelect <= ALU_SUB;
+			when ALU_ADD_I => 
+				OpSelect <= ALU_ADD;
+				
+			when ALU_SUB_I => 
+				OpSelect <= ALU_SUB;
 
 			-- Logical
-			when ALU_AND_I => OpSelect <= ALU_AND;
-			when ALU_XOR_I => OpSelect <= ALU_XOR;
-			when ALU_SLTI  => OpSelect <= ALU_SLT;
-			when ALU_SLTIU => OpSelect <= ALU_SLTIU;
+			when ALU_AND_I => 
+				OpSelect <= ALU_AND;
+				
+			when ALU_XOR_I => 
+				OpSelect <= ALU_XOR;
+				
+			when ALU_SLTI  => 
+				OpSelect <= ALU_SLT;
+				
+			when ALU_SLTIU => 
+				OpSelect <= ALU_SLTU;
 
-
-			when ALU_LW => OpSelect <= ALU_ADD;
-			when ALU_SW => OpSelect <= ALU_ADD;
-
+			when ALU_LW => 
+				OpSelect <= ALU_ADD;
+				
+			when ALU_SW => 
+				OpSelect <= ALU_ADD;
+					
 			-- Unconditial Jumps
-			when ALU_JTA => OpSelect <= ALU_ADD;
+			when ALU_JTA => 
+				OpSelect <= ALU_ADD;
+				
+			when ALU_JNL =>
+				OpSelect <= ALU_ADD;
 		  
 			-- error
-			when others => OpSelect <= "111111";
-			
+			when others => 
+				OpSelect <= "111111";
+				
 			end case;
 			
 		end if;

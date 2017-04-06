@@ -44,7 +44,8 @@ architecture STR of cpu_controller is
 			S_BRANCH_COMPLETION,
 			S_JUMP_COMPLETION,
 			S_ITYPE_EXECUTION, S_ITYPE_COMPLETION,
-			S_SHIFT_EXECUTION, S_SHIFT_COMPLETION
+			S_SHIFT_EXECUTION, S_SHIFT_COMPLETION,
+			S_MOVE_EXECUTION
 	);
 	
 	signal currentState, nextState : STATE_TYPE;
@@ -140,12 +141,20 @@ begin
 					elsif (opcode = RTYPE and IR5to0 = ALU_SRA ) then 
 						nextState <= S_SHIFT_EXECUTION;
 						
+					-- MOVE FROM HI
+					elsif (opcode = RTYPE and IR5to0 = ALU_MFHI ) then 
+						nextState <= S_MOVE_EXECUTION;
+					
+					-- MOVE FROM LOW
+					elsif (opcode = RTYPE and IR5to0 = ALU_MFLO  ) then 
+						nextState <= S_MOVE_EXECUTION;
+						
 					-- RTYPE
-					 elsif(opcode = "000000") then
+					 elsif(opcode = RTYPE) then
 						nextState <= S_RTYPE_EXECUCTION;
 						
 					-- JUMP COMPLETION
-					 elsif(opcode = "000010") then
+					 elsif(opcode = ALU_JTA) then
 						nextState <= S_JUMP_COMPLETION;
 						
 					
@@ -235,12 +244,14 @@ begin
 					-- Select destination register 
 					RegDst <= '1';
 
-
 					-- Select ALUOutput
 					MemToReg <= '0';
 
 					-- Enable Writing to register file
 					RegWrite <= '1';
+					
+					-- Send a dummy signal to ALU Controller so it disables LAU ouputs registers
+					ALUOp <= (others => '1');
 
 					nextState <= S_INSTRUCTION_FETCH;
 				-- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE -- -- RTYPE --
@@ -248,8 +259,6 @@ begin
 				
 
 				-- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE -- -- ITYPE --
-
-
 				when S_ITYPE_EXECUTION => 
 
 					-- Select Register file output a
@@ -268,12 +277,14 @@ begin
 					-- Select destination register 
 					RegDst <= '0';
 
-
 					-- Select ALUOutput
 					MemToReg <= '0';
 
 					-- Enable Writing to register file
 					RegWrite <= '1';
+					
+					-- Send a dummy signal to ALU Controller so it disables LAU ouputs registers
+					ALUOp <= (others => '1');
 
 					nextState <= S_INSTRUCTION_FETCH;
 				
@@ -308,6 +319,23 @@ begin
 						nextState <= S_INSTRUCTION_FETCH;
 				
 					-- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT -- -- SHIFT --
+					
+					
+					-- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE --
+					when S_MOVE_EXECUTION =>
+					
+						-- Select destination register 15 -11
+						RegDst <= '1';
+						
+						-- Select ALU Mux output 
+						MemToReg <= '0';
+						
+						-- Enable writing to register file 
+						RegWrite <= '1';
+						
+						nextState <= S_INSTRUCTION_FETCH;
+					-- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE --
+				
 				
 					-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
 					when S_JUMP_COMPLETION => 

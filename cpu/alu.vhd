@@ -22,16 +22,18 @@ begin
 	process(input1,input2,opSelect)
 		variable temp_add : unsigned(WIDTH downto 0);
 		variable temp_sub : unsigned(WIDTH downto 0);
-		variable temp_mult : unsigned(2*WIDTH-1 downto 0);
+		variable temp_mult : signed(2*WIDTH-1 downto 0);
+		variable temp_mult_unsigned : unsigned(2*WIDTH-1 downto 0);
 		variable zeros: unsigned(WIDTH-1 downto 0);
 		variable temp_input2 : integer;
 		variable temp_operation : std_logic_vector(WIDTH-1 downto 0);
-		
+		variable zero : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 		
 	begin
 		
 		outputHi <= (others => '0');
 		branchTaken <= '0';
+		output <= (others => '0');
 	
 		case opSelect is
 		
@@ -46,14 +48,14 @@ begin
 				output <= std_logic_vector(unsigned(temp_sub(WIDTH-1 downto 0)));
 				
 			when ALU_MULT =>
-				temp_mult:= unsigned(input1) * unsigned(input2); 
-				output <= std_logic_vector(unsigned(temp_mult(WIDTH-1 downto 0)));
-				outputHi <= std_logic_vector(unsigned(temp_mult(WIDTH*2-1 downto WIDTH)));
+				temp_mult := signed(input1) * signed(input2); 
+				output <= std_logic_vector(signed(temp_mult(WIDTH-1 downto 0)));
+				outputHi <= std_logic_vector(signed(temp_mult(WIDTH*2-1 downto WIDTH)));
 			
 			when ALU_MUL_UNSGINED =>
-				temp_mult:= unsigned(input1) * unsigned(input2); 
-				output <= std_logic_vector(unsigned(temp_mult(WIDTH-1 downto 0)));
-				outputHi <= std_logic_vector(unsigned(temp_mult(WIDTH*2-1 downto WIDTH)));
+				temp_mult_unsigned := unsigned(input1) * unsigned(input2); 
+				output <= std_logic_vector(unsigned(temp_mult_unsigned(WIDTH-1 downto 0)));
+				outputHi <= std_logic_vector(unsigned(temp_mult_unsigned(WIDTH*2-1 downto WIDTH)));
 			
 			when ALU_AND =>
 				output <= input1 and input2;
@@ -73,6 +75,48 @@ begin
 			when ALU_SRA => 
 				temp_operation := std_logic_vector(shift_right( unsigned(input2),  to_integer(unsigned(input1) )));
 				output <= "1" & temp_operation(WIDTH-2 downto 0);
+			
+			when ALU_SLT =>
+				
+					if( to_integer(signed(input1)) < to_integer(signed(input2))) then
+						branchTaken <= '1';
+					end if;
+					
+			when ALU_SLTU =>
+				
+					if( to_integer(unsigned(input1)) < to_integer(unsigned(input2))) then
+						branchTaken <= '1';
+					end if;
+					
+			when ALU_BEQ =>
+				
+				if (input1 = input2) then 
+					branchTaken <= '1';
+				end if;
+				
+			when ALU_BNE => 
+			
+				if (input1 = input2) then
+					branchTaken <= '0';
+				else 
+					branchTaken <= '1';
+				end if;
+				
+			when ALU_LTOEZ =>
+				
+				if (input1 <= zero) then 
+					branchTaken <= '1';
+				end if;
+				
+			when ALU_BGTZ =>
+				
+				if (input1 > zero) then 
+					branchTaken <= '1';
+				end if;
+				
+			when ALU_JR => 
+				temp_add := ("0" & unsigned(input1)) + ("0" & unsigned(input2));
+				output <= std_logic_vector(unsigned(temp_add(WIDTH-1 downto 0)));
 							
 			when others =>
 				temp_add := ("0" & unsigned(input1)) + ("0" & unsigned(input2));
