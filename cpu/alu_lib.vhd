@@ -32,8 +32,6 @@ package alu_lib is
 	-- Unconditional Jump
 	constant ALU_JR : std_logic_vector := std_logic_vector(to_unsigned(16#08#, NUMBER_SIZE)); -- branch greater than zero
 	
-	
-	
 	-- ITypes
 	-- Arithmetic
 	constant ALU_ADD_I : std_logic_vector := std_logic_vector(to_unsigned(16#09#, NUMBER_SIZE));

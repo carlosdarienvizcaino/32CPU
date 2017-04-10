@@ -41,6 +41,7 @@ architecture STR of top_level is
 	constant CLOCK_FREQUENCY : natural := 500000000;
 	
 begin 
+	
 
 	CPU_CLOCK : entity work.clk_div
 	generic map(

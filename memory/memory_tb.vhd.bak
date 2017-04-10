@@ -8,34 +8,30 @@ end memory_tb;
 architecture TB of memory_tb is
 
     constant WIDTH  : positive                           := 32;
-	 
-	 -- Inputs
-    signal clk       : std_logic := '0';
+    signal clk  : std_logic := '0';
 	 signal MemRead   : std_logic;
-	 signal MemWrite  : std_logic;
+	 signal MemWrite   : std_logic;
 		 
 	 signal inPort1_en : std_logic;
 	 signal inPort2_en : std_logic;
 		 
-	 signal inPort1 :  std_logic_vector(WIDTH-1 downto 0);
-	 signal inPort2 :  std_logic_vector(WIDTH-1 downto 0);
+	 signal inPort1 :  std_logic_vector(7 downto 0);
+	 signal inPort2 :  std_logic_vector(7 downto 0);
 		 
-	 signal address   :  std_logic_vector(WIDTH-1 downto 0);
-	 signal cpu_input :  std_logic_vector(WIDTH-1 downto 0);
+	 signal address:  std_logic_vector(WIDTH-1 downto 0);
+	 signal Reg_B: std_logic_vector(WIDTH-1 downto 0);
 		 
-	 -- Outputs
-	 signal instruction : std_logic_vector(WIDTH-1 downto 0);
-	 signal output      : std_logic_vector(WIDTH-1 downto 0);
+	 signal instructionRegisterOutput : std_logic_vector(WIDTH-1 downto 0);
+	 signal output : std_logic_vector(WIDTH-1 downto 0);
 
 begin  -- TB
 
       UUT : entity work.memory
         generic map (WIDTH => WIDTH)
         port map (
-				-- Inputs
-            clock  => clk,
+            clk_50MHz  => clk,
 				
-				MemRead    => MemRead,
+				MemRead   => MemRead,
 				MemWrite   => MemWrite,
 		 
 				inPort1_en => inPort1_en,
@@ -45,10 +41,9 @@ begin  -- TB
 				inPort2    => inPort2,
 		 
 				address    => address,
-				cpu_input => cpu_input,
-				
-				-- Outputs
-				instruction => instruction,
+				Reg_B      => Reg_B,
+		 
+				instructionRegisterOutput => instructionRegisterOutput,
 				output  => output
 			);
 			
@@ -57,15 +52,9 @@ begin  -- TB
     process
     begin
 	 
-			MemRead <= '1';
-			MemWrite <= '0';
-			
-			inPort1_en <= '0';
-			inPort2_en <= '0';
-	 
 		-- Test Load and Read input 1
 			inPort1_en <= '1';
-			inPort1 <= std_logic_vector(to_unsigned(1, 32));
+			inPort1 <= std_logic_vector(to_unsigned(2, 8));
 			address <= to_stdlogicvector(x"0000FFF8");
 			wait until clk = '1';
 			wait for 40 ns;
@@ -73,7 +62,7 @@ begin  -- TB
 			
 		-- Test Load and Read input 2
 			inPort2_en <= '1';
-			inPort2 <= std_logic_vector(to_unsigned(2, 32));
+			inPort2 <= std_logic_vector(to_unsigned(2, 8));
 			address <= to_stdlogicvector(x"0000FFFC");
 			wait until clk = '1';
 			wait for 40 ns;

@@ -44,10 +44,9 @@ architecture STR of memory is
 begin 
 	
 	ram_write_en <= (not MemRead and MemWrite);
-	instruction <= data_from_ram;
 	data_to_ram <= cpu_input;
 	
-	-- Output 
+	-- Output Port
 	process(ram_write_en, address)
 	begin 
 		
@@ -55,6 +54,22 @@ begin
 			outport_enable <= '1';
 		else
 			outport_enable <= '0';
+		end if;
+	
+	end process;
+	
+	process(address, data_from_ram, inPort1Out, inPort2Out ) 
+	begin 
+	
+		-- IN PORT 1
+		if(address = std_logic_vector(to_unsigned(16#FFF8#, WIDTH))) then
+			instruction <= inPort1Out;
+		-- IN PORT 2
+		elsif (address = std_logic_vector(to_unsigned(16#FFFC#, WIDTH))) then
+			instruction <= inPort2Out;
+		-- RAM
+		else 
+			instruction <= data_from_ram;
 		end if;
 	
 	end process;
