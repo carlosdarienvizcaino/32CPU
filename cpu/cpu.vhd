@@ -160,6 +160,7 @@ begin
 		wr_data  => memory_data_mux_output,
 		
 		wr_en  => RegWrite,
+		jump_and_link => JumAndLink,
 		
 		-- Outputs
 		rd_data0  => read_data1_output,
@@ -286,6 +287,7 @@ begin
 	SIGNED_EXTEND: entity work.signed_extend
 		port map(
 			-- Inputs
+			rst => rst,
 			clock => clock,
 			input => instruction_lower_bits,
 			isSigned => isSigned,
@@ -399,6 +401,6 @@ begin
 
 
 		alu_mux2_mux_in4  <= std_logic_vector(shift_left( unsigned(signed_extend_output), 2 ));
-		pc_mux_mux_in3    <= pc_output(31 downto 28) & instr_index & "00";
+		pc_mux_mux_in3    <= "00000000000000" & instruction_lower_bits & "00";
 		
 end STR;

@@ -19,6 +19,7 @@ entity register_file is
 		wr_data : in std_logic_vector(word_width-1 downto 0);
 		
 		wr_en : in std_logic;
+		jump_and_link : std_logic;
 		
 		-- Outputs
 		rd_data1 : out std_logic_vector(word_width-1 downto 0);
@@ -32,6 +33,7 @@ architecture DEF of register_file is
 	
 	type reg_array is array(0 to 2**address_width-1) of std_logic_vector(word_width-1 downto 0);
 	signal regs : reg_array;
+	signal reg32Address : std_logic_vector(4 downto 0) := "11111";
 	
 	begin 
 		process(clock, rst)
@@ -47,8 +49,10 @@ architecture DEF of register_file is
 				
 				if(wr_en = '1') then
 					regs(to_integer(unsigned(wr_addr))) <= wr_data; 
-				end if;
 				
+				elsif(jump_and_link = '1') then 
+					regs(to_integer(unsigned(reg32Address))) <= wr_data; 
+				end if;
 			end if;
 		
 		end process;

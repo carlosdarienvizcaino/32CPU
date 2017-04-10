@@ -39,10 +39,25 @@ architecture STR of memory is
 	-- IOs or Ram Address Select
 	signal address_select : std_logic_vector(1 downto 0);
 	
+	signal outport_enable : std_logic;
+	
 begin 
 	
 	ram_write_en <= (not MemRead and MemWrite);
 	instruction <= data_from_ram;
+	data_to_ram <= cpu_input;
+	
+	-- Output 
+	process(ram_write_en, address)
+	begin 
+		
+		if (ram_write_en = '1' and address = std_logic_vector(to_unsigned(16#FFFC#, WIDTH))) then
+			outport_enable <= '1';
+		else
+			outport_enable <= '0';
+		end if;
+	
+	end process;
 
 	RAM: entity work.ram
 		port map (
@@ -73,7 +88,7 @@ begin
 		generic map(WIDTH => 32)
 		port map (
 			clk    => clock,
-			en     => MemWrite,
+			en     => outport_enable,
 			input  => cpu_input,
 			output => output
 		);

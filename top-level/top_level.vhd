@@ -12,11 +12,14 @@ entity top_level is
 		 inPort1_en : in std_logic;
 		 inPort2_en : in std_logic;
 		 
-		 inPort1 : in std_logic_vector(7 downto 0);
-		 inPort2 : in std_logic_vector(7 downto 0);
+		 inPort : in std_logic_vector(9 downto 0);
+		
 		 
 		 -- Outputs
-		 output : out std_logic_vector(WIDTH-1 downto 0)
+		 led0     : out std_logic_vector(6 downto 0);
+		 led1     : out std_logic_vector(6 downto 0);
+		 led2     : out std_logic_vector(6 downto 0);
+		 led3     : out std_logic_vector(6 downto 0)
 	 );
 end top_level;
 
@@ -29,8 +32,9 @@ architecture STR of top_level is
 	signal cpu_input : std_logic_vector(WIDTH -1 downto 0);
 	signal instruction : std_logic_vector(WIDTH -1 downto 0);
 	
-	signal internalInPort1 : std_logic_vector(WIDTH-1 downto 0);
-	signal internalInPort2 : std_logic_vector(WIDTH-1 downto 0);
+	signal internalInPort : std_logic_vector(WIDTH-1 downto 0);
+	
+	signal memory_output : std_logic_vector(WIDTH-1 downto 0);
 	
 	signal cpu_clck : std_logic;
 	
@@ -59,15 +63,15 @@ begin
 			inPort1_en  => inPort1_en,
 			inPort2_en  => inPort2_en,
 		 
-		   inPort1     => internalInPort1,
-		   inPort2     => internalInPort2,
+		   inPort1     => internalInPort,
+		   inPort2     => internalInPort,
 		 
 		   address     => address,
 		   cpu_input   => cpu_input,
 		 
 			-- Outputs
 		   instruction  => instruction,
-		   output      => output
+		   output      => memory_output
 		);	
 		
 	CPU: entity work.cpu
@@ -83,10 +87,31 @@ begin
 			MemWrite  => MemWrite,
 			output    => cpu_input
 		);	
+	
+	NIBBLE1: entity work.decoder7seg
+		port map(
+				input  => memory_output(3 downto 0),
+            output => led0
+			);
+			
+	NIBBLE2: entity work.decoder7seg
+		port map(
+				input  => memory_output(7 downto 4),
+            output => led1
+			);
+	
+	NIBBLE3: entity work.decoder7seg
+		port map(
+				input  => memory_output(11 downto 8),
+            output => led2
+			);
+			
+	NIBBLE4: entity work.decoder7seg
+		port map(
+				input  => memory_output(15 downto 12),
+				output => led3
+			);
+	
+	internalInPort <= "0000000000000000000000" & inPort;
 
-	
-	internalInPort1 <= "000000000000000000000000" & inPort1;
-	internalInPort2 <= "000000000000000000000000" & inPort2;
-	
-	 
 end STR;

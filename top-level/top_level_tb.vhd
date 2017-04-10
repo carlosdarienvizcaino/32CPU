@@ -17,8 +17,12 @@ architecture TB of top_level_tb is
 	 signal inPort1_en : std_logic := '0';
 	 signal inPort2_en : std_logic := '0';
 	 
-    signal inPort1   : std_logic_vector(7 downto 0) := (others => '0');
-    signal inPort2   : std_logic_vector(7 downto 0) := (others => '0');
+    signal inPort   : std_logic_vector(9 downto 0) := (others => '0');
+	 
+	 signal led0     :  std_logic_vector(6 downto 0);
+	 signal led1     :  std_logic_vector(6 downto 0);
+	 signal led2     :  std_logic_vector(6 downto 0);
+	 signal led3     :  std_logic_vector(6 downto 0);
 	 
     signal output   : std_logic_vector(WIDTH-1 downto 0);
  
@@ -34,11 +38,13 @@ begin  -- TB
 		  inPort1_en => inPort1_en,
 		  inPort2_en => inPort2_en,
 		 
-		  inPort1 => inPort1,
-		  inPort2 => inPort2,
+		  inPort => inPort,
 		 
 		  -- Outputs
-		  output  => output
+		 led0     => led0,
+		 led1     => led1,
+		 led2     => led2,
+		 led3     => led3
 	 );
 	 
     clock <= not clock after 10 ns;

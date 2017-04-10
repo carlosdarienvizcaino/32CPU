@@ -79,13 +79,13 @@ begin
 			when ALU_SLT =>
 				
 					if( to_integer(signed(input1)) < to_integer(signed(input2))) then
-						branchTaken <= '1';
+						output <= "00000000000000000000000000000001";
 					end if;
 					
 			when ALU_SLTU =>
 				
 					if( to_integer(unsigned(input1)) < to_integer(unsigned(input2))) then
-						branchTaken <= '1';
+						output <= "00000000000000000000000000000001";
 					end if;
 					
 			when ALU_BEQ =>

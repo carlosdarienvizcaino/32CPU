@@ -88,12 +88,21 @@ begin
 				
 			when ALU_SW => 
 				OpSelect <= ALU_ADD;
+				
+			when ALU_BEQ =>
+				OpSelect <= ALU_BEQ;
+				
+			when ALU_BNE =>
+				OpSelect <= ALU_BNE;
 					
 			-- Unconditial Jumps
 			when ALU_JTA => 
 				OpSelect <= ALU_ADD;
 				
 			when ALU_JNL =>
+				OpSelect <= ALU_ADD;
+			
+			when ALU_JR =>
 				OpSelect <= ALU_ADD;
 		  
 			-- error

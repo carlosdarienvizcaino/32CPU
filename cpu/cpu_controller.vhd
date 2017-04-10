@@ -40,12 +40,16 @@ architecture STR of cpu_controller is
 			S_INSTRUCTION_FETCH,
 			S_INSTRUCTION_DECODE,
 			S_MEMORY_ADDRESS, S_LW_MEMORY_ACCESS, S_SW_MEMORY_ACCESS, S_MEMORY_ACCESS_COMPUTATION, S_MEMORY_READ_COMPLETION,
-		   	S_RTYPE_EXECUCTION, S_RTYPE_COMPLETION,
+		   S_RTYPE_EXECUCTION, S_RTYPE_COMPLETION,
 			S_BRANCH_COMPLETION,
 			S_JUMP_COMPLETION,
 			S_ITYPE_EXECUTION, S_ITYPE_COMPLETION,
 			S_SHIFT_EXECUTION, S_SHIFT_COMPLETION,
-			S_MOVE_EXECUTION
+			S_MOVE_EXECUTION,
+			S_BRANCH_CONDITION_EXECUTION, S_BRANCH_CONDITION_COMPLETION,
+			S_JUMP_AND_LINK_EXCECUTION, S_JUMP_AND_LINK_COMPLETION,
+			S_JUMP_REGISTER_COMPLETION,
+			S_REGISTER_COMPARE_EXECUTION, S_REGISTER_COMPARE_COMPLETION, S_IMMEDIATE_COMPARE_EXECUTION, S_IMMEDIATE_COMPARE_COMPLETION
 	);
 	
 	signal currentState, nextState : STATE_TYPE;
@@ -122,11 +126,11 @@ begin
 				 ALUOp <= (others => '0'); -- set op code to R-Type
 				
 					-- LW	
-					 if (opcode = "100011") then 
+					 if (opcode = ALU_LW) then 
 						nextState <= S_MEMORY_ACCESS_COMPUTATION;
 					
 					-- SW
-					 elsif (opcode = "101011") then 
+					 elsif (opcode = ALU_SW) then 
 						nextState <= S_MEMORY_ACCESS_COMPUTATION;
 						
 					-- SHIFT LEFT LOGIC
@@ -141,6 +145,22 @@ begin
 					elsif (opcode = RTYPE and IR5to0 = ALU_SRA ) then 
 						nextState <= S_SHIFT_EXECUTION;
 						
+					-- SET ON LESS THAN SINGED
+					elsif (opcode = RTYPE and IR5to0 = ALU_SLT ) then 
+						nextState <= S_REGISTER_COMPARE_EXECUTION;
+						
+					-- SET ON LESS THAN UNSIGED
+					elsif (opcode = RTYPE and IR5to0 = ALU_SLTU ) then 
+						nextState <= S_REGISTER_COMPARE_EXECUTION;
+						
+					-- SET ON LESS THAN IMMEDIATE SINGED
+					elsif (opcode = ALU_SLTI) then 
+						nextState <= S_IMMEDIATE_COMPARE_EXECUTION;
+						
+					-- SET ON LESS THAN IMMEDIATE UNSIGED
+					elsif (opcode = ALU_SLTIU) then 
+						nextState <= S_IMMEDIATE_COMPARE_EXECUTION;
+						
 					-- MOVE FROM HI
 					elsif (opcode = RTYPE and IR5to0 = ALU_MFHI ) then 
 						nextState <= S_MOVE_EXECUTION;
@@ -149,13 +169,38 @@ begin
 					elsif (opcode = RTYPE and IR5to0 = ALU_MFLO  ) then 
 						nextState <= S_MOVE_EXECUTION;
 						
+					-- JUMP REGISTER
+					elsif (opcode = RTYPE and IR5to0 = ALU_JR  ) then 
+						-- Send opcode to ALU Controller
+						ALUOp <= ALU_JR;
+						
+						nextState <= S_JUMP_REGISTER_COMPLETION;
+						
 					-- RTYPE
 					 elsif(opcode = RTYPE) then
 						nextState <= S_RTYPE_EXECUCTION;
 						
+					-- BRANCH CONDITIONS
+					elsif (opcode = ALU_BEQ or opcode = ALU_BNE) then 
+						nextState <= S_BRANCH_CONDITION_EXECUTION;
+						
 					-- JUMP COMPLETION
 					 elsif(opcode = ALU_JTA) then
 						nextState <= S_JUMP_COMPLETION;
+						
+					-- JUMP AND LINK
+					 elsif(opcode = ALU_JNL) then
+						
+						-- Select lower 25 bits
+						RegDst <= '0';
+						
+						-- Select alu output which is PC+4
+						MemToReg <= '0';
+						
+						-- set jump and link 
+						JumAndLink <= '1';
+						
+						nextState <= S_JUMP_AND_LINK_EXCECUTION;
 						
 					
 					 else 	
@@ -179,7 +224,7 @@ begin
 					ALUOp <= "100001";
 
 					-- LW
-				 	if (opcode = "100011") then 
+				 	if (opcode = ALU_LW) then 
 						nextState <= S_LW_MEMORY_ACCESS;
 
 					else
@@ -219,6 +264,12 @@ begin
 					
 						
 				when S_SW_MEMORY_ACCESS  =>
+				
+					-- Select ALU Output as memory address
+					IorD <= '1';
+					
+					-- Enable Writing to memeory
+					MemWrite <= '1';
 				 	
 					nextState <= S_INSTRUCTION_FETCH;
 					
@@ -335,7 +386,43 @@ begin
 						
 						nextState <= S_INSTRUCTION_FETCH;
 					-- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE -- -- MOVE --
-				
+					
+					
+					-- CONDITIONAL BRANCHING --  -- CONDITIONAL BRANCHING -- -- CONDITIONAL BRANCHING -- 
+					when S_BRANCH_CONDITION_EXECUTION =>
+						
+						-- PC = PC + 4 + OFFSET
+						-- ALUOp 
+						ALUOp <= ALU_ADD;
+						
+						-- Select PC+4
+						ALUSrcA <= "00";
+						
+						-- Select Offset shift lefted by 2
+						ALUSrcB <= "11";
+						
+						nextState <= S_BRANCH_CONDITION_COMPLETION;
+						
+						
+					when S_BRANCH_CONDITION_COMPLETION =>
+						
+						ALUOp <= opcode;
+					
+						-- Select RegA
+						ALUSrcA <= "10";
+						
+						-- Select RegB
+						ALUSrcB <= "00";
+					
+						-- Set PCWriteConditin
+						PCWriteCond <= '1';
+						
+						-- Select offset shift left by 2
+						PCSource <= "01";
+						
+						nextState <= S_INSTRUCTION_FETCH;
+						
+					-- CONDITIONAL BRANCHING -- -- CONDITIONAL BRANCHING -- -- CONDITIONAL BRANCHING -- 	
 				
 					-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
 					when S_JUMP_COMPLETION => 
@@ -349,7 +436,106 @@ begin
 					
 					nextState <= S_INSTRUCTION_FETCH;
 					
+					when S_JUMP_AND_LINK_EXCECUTION =>
+						
+						-- Select lower bits as next PC 
+						PCSource <= "10";
+						
+						-- Enable PC to be updated
+						PCWrite <= '1';
+						
+						nextState <= S_INSTRUCTION_FETCH;
+						
+					when S_JUMP_AND_LINK_COMPLETION =>
+					
+						
+						nextState <= S_INSTRUCTION_FETCH;
+						
+					
+					when S_JUMP_REGISTER_COMPLETION =>
+						
+						-- Select RegA
+						ALUSrcA <= "10";
+						
+						-- Select RegB
+						ALUSrcB <= "00";
+						
+						-- Select ALUOuput for PC
+						PCSource <= "00";
+						
+						-- Enable writing to PC
+						PCWrite <= '1';
+						
+						nextState <= S_INSTRUCTION_FETCH;
+
+					
 				-- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION -- -- JUMP COMPLETION --
+				
+				-- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE --
+				
+				when S_REGISTER_COMPARE_EXECUTION =>
+						
+						-- Select RegA
+						ALUSrcA <= "10";
+						
+						-- Select RegB
+						ALUSrcB <= "00";
+						
+						if (IR5to0 = ALU_SLT) then
+							isSigned <= '1';
+						end if;
+						
+						nextState <= S_REGISTER_COMPARE_COMPLETION;
+						
+			   when S_REGISTER_COMPARE_COMPLETION => 
+						
+						-- Save ALU Result in destination register 
+						MemToReg <= '0';
+						
+						-- Select Register destination 15-11
+						RegDst <= '1';
+						
+						-- Enable writing to register file
+						RegWrite <= '1';
+						
+						nextState <= S_INSTRUCTION_FETCH;
+						
+						
+				
+				when S_IMMEDIATE_COMPARE_EXECUTION =>
+					
+						-- Select RegA
+						ALUSrcA <= "10";
+						
+						-- Select Signed Extended
+						ALUSrcB <= "10";
+						
+						if (opcode  = ALU_SLTI) then 
+							isSigned <= '1';
+						end if;
+						
+						nextState <= S_IMMEDIATE_COMPARE_COMPLETION;
+						
+						
+				when S_IMMEDIATE_COMPARE_COMPLETION => 
+						
+						-- Save ALU Result in destination register 
+						MemToReg <= '0';
+						
+						-- Select Register destination 20-16
+						RegDst <= '0';
+						
+						-- Enable writing to register file
+						RegWrite <= '1';
+						
+						nextState <= S_INSTRUCTION_FETCH;
+						
+			
+				
+						
+				-- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE -- -- COMPARE --
+				
+				
 				when others => null;
 				
 			
