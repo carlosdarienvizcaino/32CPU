@@ -1,0 +1,33 @@
+Depth = 256;
+Width = 32;
+Address_radix = hex;
+Data_radix = bin;
+% Program RAM Data %					--  This program will load a series of different positive integer and display them in the ascending order
+Content							-- To use this program correctly follow this steps
+							-- Step1:	select the size then enable Inport0
+							-- step2: 	select the first entry then enable inport1
+							-- step3:	press the  reset button
+							-- step3: 	change the entry value and enable inport1 for size-1 times
+							-- All the entries will get displayed continuously in the ascending order
+  Begin
+
+-- Load Inputs
+00 : 100011 00000 10000 1111111111111000 ;  -- lw $16, FFF8($zero) // Load word from the Inport0 to R16
+04 : 100011 00000 10001 1111111111111100 ;  -- lw $17, FFFC($zero) //Load word from the Inport1 to R17
+
+-- Loop
+08 : 000100 10001 10000 00000 00000000110	;		-- beq $16, $17, EXIT LOOP
+0C : 000000 10001 10000 01000 00000101011	;		-- sltu $8, $17 , $16 // if R17 < R16, R8 = 1; else R8 = 0
+10 : 000101 01000 00000 00000 00000000010	;		-- bne $8, $zero, branch to skip
+14 : 000000 10001 10000 10001 00000 100011	;	    -- subu $17, $17, $16			// $17 = $17 - $16
+18 : 000010 00000000000000000000000010	;		    -- j loop // jump to loop
+
+-- Skip
+1C : 000000 10000 10001 10000 00000 100011	;	    -- subu $16, $16, $17			// $16 = $16 - $17
+20 : 000010 00000000000000000000000010	;		    -- j loop // jump to loop
+
+-- Exit the loop
+24 : 101011 00000 10000 1111111111111100	;		-- sw $R16, FFFC($zero)			// store R16 to the outport1
+
+-- End:
+28 : 000010 00000000000000000000001010	;		    -- j loop // jump to loop

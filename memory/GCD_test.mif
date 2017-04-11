@@ -1,0 +1,33 @@
+Depth = 256;
+Width = 32;
+Address_radix = hex;
+Data_radix = bin;
+% Program RAM Data %					--  This program will calculate the greatest common denominator between two numbers.
+Content							-- To use this program correctly follow this steps
+							-- Step1:	select number A from Inport0 by enabling Inport0
+							-- step2: 	select number B from Inport1 by enabling Inport1
+							-- step3:	press the  reset button
+  Begin
+
+-- Load Inputs
+00 : 10001100000100001111111111111000 ;  -- lw $16, FFF8($zero) // Load word from the Inport0 to R16
+04 : 10001100000100011111111111111100 ;  -- lw $17, FFFC($zero) //Load word from the Inport1 to R17
+
+-- Loop
+08 : 00010010001100000000000000000110	;		-- beq $16, $17, EXIT LOOP
+0C : 00000010001100000100000000101011	;		-- sltu $8, $17 , $16 // if R17 < R16, R8 = 1; else R8 = 0
+10 : 00010101000000000000000000000010	;		-- bne $8, $zero, branch to skip
+14 : 00000010001100001000100000100011	;	    -- subu $17, $17, $16			// $17 = $17 - $16
+18 : 00001000000000000000000000000010	;		    -- j loop // jump to loop
+
+-- Skip
+1C : 00000010000100011000000000100011	;	    -- subu $16, $16, $17			// $16 = $16 - $17
+20 : 00001000000000000000000000000010	;		    -- j loop // jump to loop
+
+-- Exit the loop
+24 : 10101100000100001111111111111100	;		-- sw $R16, FFFC($zero)			// store R16 to the outport1
+
+-- End:
+28 : 00001000000000000000000000001010	;		    -- j loop // jump to loop
+
+End;
