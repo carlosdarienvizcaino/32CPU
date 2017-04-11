@@ -34,7 +34,6 @@ end cpu_controller;
 
 architecture STR of cpu_controller is
 	
-	
 	type STATE_TYPE is (
 			S_START,
 			S_INSTRUCTION_FETCH,
@@ -393,13 +392,15 @@ begin
 						
 						-- PC = PC + 4 + OFFSET
 						-- ALUOp 
-						ALUOp <= ALU_ADD;
+						ALUOp <= ALU_ADD_SIGNED;
 						
 						-- Select PC+4
 						ALUSrcA <= "00";
 						
 						-- Select Offset shift lefted by 2
 						ALUSrcB <= "11";
+						
+						isSigned <= '1';
 						
 						nextState <= S_BRANCH_CONDITION_COMPLETION;
 						
@@ -432,7 +433,7 @@ begin
 					PCWriteCond <= '1';
 					
 					-- Select Jump Address
-					PCSource <= "10";
+					PCSource <= "11";
 					
 					nextState <= S_INSTRUCTION_FETCH;
 					

@@ -5,30 +5,36 @@ use ieee.numeric_std.all;
 entity ioport is
   generic(WIDTH : natural := 32);
   port (
-			clk    : in std_logic;
-			en     : in std_logic;
-			input  : in std_logic_vector(WIDTH-1 downto 0);
-			output : out std_logic_vector(WIDTH-1 downto 0)
+			-- Inputs
+			clock    : in std_logic;
+			rst 		: in std_logic;
+			enable   : in std_logic;
+			input    : in std_logic_vector(WIDTH-1 downto 0);
+			
+			-- Outputs
+			output   : out std_logic_vector(WIDTH-1 downto 0)
 	 );
 end ioport;
 
 architecture STR of ioport is
-	signal temp_output : std_logic_vector(WIDTH -1 downto 0);
+	
+	signal internal_enable : std_logic;
 begin 
 
-	process(clk)
+	process(rst, clock)
 	begin
-			if(clk'event and clk = '1') then 
-					output <= temp_output;
-			end if;
-	end process;
-	
-	process(en)
-	begin 
-			if(en = '1') then 
-				temp_output <= input;
-			end if;
-	 
+			internal_enable <= enable;
+			if(rst = '1') then
+					output <= (others => '0');
+			
+			elsif(clock'event and clock = '1') then 
+			
+				if (internal_enable = '1') then
+					output <= input;
+				end if;
+				
+			 end if;
+			
 	end process;
 	 
 end STR;

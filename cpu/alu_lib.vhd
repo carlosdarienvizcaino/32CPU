@@ -10,6 +10,7 @@ package alu_lib is
 	
 	-- Arithmetic 
 	constant ALU_ADD : std_logic_vector := std_logic_vector(to_unsigned(16#21#, NUMBER_SIZE));
+	constant ALU_ADD_SIGNED : std_logic_vector := std_logic_vector(to_unsigned(16#22#, NUMBER_SIZE));
 	constant ALU_SUB : std_logic_vector := std_logic_vector(to_unsigned(16#23#, NUMBER_SIZE));
 	constant ALU_MULT : std_logic_vector := std_logic_vector(to_unsigned(16#18#, NUMBER_SIZE));
 	constant ALU_MUL_UNSGINED : std_logic_vector := std_logic_vector(to_unsigned(16#19#, NUMBER_SIZE));

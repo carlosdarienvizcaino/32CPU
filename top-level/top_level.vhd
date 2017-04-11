@@ -40,6 +40,10 @@ architecture STR of top_level is
 	
 	constant CLOCK_FREQUENCY : natural := 500000000;
 	
+	signal rst_active_high  	    :  std_logic;	 
+	signal inPort1_en_active_high  :  std_logic;
+	signal inPort2_en_active_high  : std_logic;
+	
 begin 
 	
 
@@ -51,7 +55,7 @@ begin
 	port map(
 		  clk_in  => clock,
         clk_out => cpu_clck,
-        rst     => rst
+        rst     => rst_active_high
 	);
 
 	MEMORY: entity work.memory
@@ -61,8 +65,8 @@ begin
 			MemRead     => MemRead,
 			MemWrite    => MemWrite,
 		 
-			inPort1_en  => inPort1_en,
-			inPort2_en  => inPort2_en,
+			inPort1_en  => inPort1_en_active_high,
+			inPort2_en  => inPort2_en_active_high,
 		 
 		   inPort1     => internalInPort,
 		   inPort2     => internalInPort,
@@ -79,7 +83,7 @@ begin
 		port map (
 			-- Inputs
 			clock     => cpu_clck,
-			rst       => rst,
+			rst       => rst_active_high,
 			instruction => instruction,
 			
 			-- Outputs
@@ -114,5 +118,9 @@ begin
 			);
 	
 	internalInPort <= "0000000000000000000000" & inPort;
+	 
+	rst_active_high  	     <= not rst;	 
+	inPort1_en_active_high <= not inPort1_en;
+   inPort2_en_active_high <= not inPort2_en;
 
 end STR;

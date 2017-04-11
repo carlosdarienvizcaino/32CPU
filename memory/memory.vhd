@@ -36,15 +36,17 @@ architecture STR of memory is
 	signal inPort1Out : std_logic_vector(WIDTH-1 downto 0);
 	signal inPort2Out : std_logic_vector(WIDTH-1 downto 0);
 	
-	-- IOs or Ram Address Select
-	signal address_select : std_logic_vector(1 downto 0);
-	
 	signal outport_enable : std_logic;
 	
+	signal io_inPort1_en : std_logic;
+	signal io_inPort2_en : std_logic;
+
 begin 
 	
 	ram_write_en <= (not MemRead and MemWrite);
 	data_to_ram <= cpu_input;
+	io_inPort1_en <= inPort1_en;
+	io_inPort2_en <= inPort2_en;
 	
 	-- Output Port
 	process(ram_write_en, address)
@@ -85,16 +87,20 @@ begin
 		
 	IOPort1 : entity work.ioport
 		port map (
-			clk    => clock,
-			en     => inPort1_en,
+		
+			rst    => '0',
+			clock    => clock,
+			enable     => io_inPort1_en,
 			input  => inPort1,
 			output => inPort1Out
 		);
 		
 	IOPort2 : entity work.ioport
 		port map (
-			clk    => clock,
-			en     => inPort2_en,
+		
+			rst    => '0',
+			clock    => clock,
+			enable     => io_inPort2_en,
 			input  => inPort2,
 			output => inPort2Out
 		);
@@ -102,10 +108,11 @@ begin
 	IOPortOut : entity work.ioport
 		generic map(WIDTH => 32)
 		port map (
-			clk    => clock,
-			en     => outport_enable,
-			input  => cpu_input,
-			output => output
+			rst      => '0',
+			clock    => clock,
+			enable   => outport_enable,
+			input    => cpu_input,
+			output   => output
 		);
 	 	 
 	

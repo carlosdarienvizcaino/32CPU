@@ -29,6 +29,8 @@ begin
 		variable temp_operation : std_logic_vector(WIDTH-1 downto 0);
 		variable zero : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 		
+		variable temp_add_signed : signed (WIDTH downto 0);
+		
 	begin
 		
 		outputHi <= (others => '0');
@@ -41,6 +43,10 @@ begin
 			
 			when ALU_ADD =>
 				temp_add := ("0" & unsigned(input1)) + ("0" & unsigned(input2));
+				output <= std_logic_vector(unsigned(temp_add(WIDTH-1 downto 0)));
+				
+			when ALU_ADD_SIGNED =>
+				temp_add_signed := ("0" & signed(input1)) + ("0" & signed(input2));
 				output <= std_logic_vector(unsigned(temp_add(WIDTH-1 downto 0)));
 				
 			when ALU_SUB =>

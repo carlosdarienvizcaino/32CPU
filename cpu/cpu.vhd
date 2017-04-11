@@ -85,6 +85,7 @@ architecture STR of cpu is
 	signal pc_enable : std_logic;
 	signal pc_output : std_logic_vector(WIDTH-1 downto 0);
 	signal pc_mux_mux_in3 : std_logic_vector(WIDTH-1 downto 0);
+	signal pc_mux_mux_in4 : std_logic_vector(WIDTH-1 downto 0);
 	
 	signal write_register_mux_output : std_logic_vector(4 downto 0);
 	signal memory_data_mux_output : std_logic_vector(WIDTH-1 downto 0);
@@ -384,7 +385,7 @@ begin
 		mux_in1  => alu_output,
 		mux_in2  => alu_reg_output,
 		mux_in3  => pc_mux_mux_in3, 
-		mux_in4  => error,
+		mux_in4  => pc_mux_mux_in4,
 		mux_sel  => PCSource,
 		
 		-- Outputs
@@ -402,5 +403,6 @@ begin
 
 		alu_mux2_mux_in4  <= std_logic_vector(shift_left( unsigned(signed_extend_output), 2 ));
 		pc_mux_mux_in3    <= "00000000000000" & instruction_lower_bits & "00";
+		pc_mux_mux_in4   <=  "0000" & instr_index & "00";
 		
 end STR;
