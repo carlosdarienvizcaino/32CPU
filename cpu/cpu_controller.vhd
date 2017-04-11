@@ -296,9 +296,14 @@ begin
 
 					-- Select ALUOutput
 					MemToReg <= '0';
-
-					-- Enable Writing to register file
-					RegWrite <= '1';
+					
+					
+					if (IR5to0 = ALU_MULT or IR5to0 = ALU_MUL_UNSGINED) then 
+						RegWrite <= '0';
+					else 
+						-- Enable Writing to register file
+						RegWrite <= '1';
+					end if;
 					
 					-- Send a dummy signal to ALU Controller so it disables LAU ouputs registers
 					ALUOp <= (others => '1');

@@ -10,6 +10,7 @@ end top_level_tb;
 architecture TB of top_level_tb is
 
     constant WIDTH  : positive                           := 32;
+	 constant INPORT_WIDTH : positive := 10;
 	 
 	 signal clock : std_logic := '0';
 	 signal rst : std_logic := '0';
@@ -52,18 +53,47 @@ begin  -- TB
     process
     begin
 			
-			rst <= '1';
+			-- Reset everything
+			rst <= '0'; -- reset true
 			wait until clock = '1';
 			wait for 40 ns;
+			rst <= '1';
+	 
+		-- Disable all enables by setting them to high
 			rst <= '0';
+			inPort1_en <= '1';
+		   inPort2_en <= '1';
 			
-			-- Test read RAM
-			for i in 0 to WIDTH-1 loop
-					--MemRead <= '1';
-					--address <= std_logic_vector(to_unsigned(i, 32));
-					wait until clock = '1';
-					wait for 40 ns;
-			end loop;
+			-- Add list size
+			wait for 40 ns;
+			inPort1_en <= '0'; -- enable port 1
+			inPort2_en <= '1';
+			inPort <= conv_std_logic_vector(3, INPORT_WIDTH);
+			
+			
+			-- Set first entry
+			wait for 40 ns;
+			inPort1_en <= '1'; -- enable port 2
+			inPort2_en <= '0';
+			inPort <= conv_std_logic_vector(4, INPORT_WIDTH);
+			
+			-- Start program
+			rst <= '0'; -- reset true
+			wait until clock = '1';
+			wait for 40 ns;
+			rst <= '1';
+			
+			-- Set second entry
+			wait for 2000 ns;
+			inPort1_en <= '1'; -- enable port 2
+			inPort2_en <= '0';
+			inPort <= conv_std_logic_vector(1, INPORT_WIDTH);
+			
+			-- Set third entry
+			wait for 500 ns;
+			inPort1_en <= '1'; -- enable port 2
+			inPort2_en <= '0';
+			inPort <= conv_std_logic_vector(2, INPORT_WIDTH);
 	 
 		report "SIMULATION FINISHED!";
       wait;
